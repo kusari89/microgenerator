@@ -37,7 +37,6 @@ class MainWindow(QMainWindow):
         self.funk_enable = FunkEnable()
         self.battery = Battery()
         self.freq_options = FreqOptions()
-        self.serial_worker = None
 
         layout_left = QVBoxLayout()
         layout_left.addWidget(self.com_parameters)
@@ -71,14 +70,11 @@ class MainWindow(QMainWindow):
         # Устанавливаем центральный виджет Window.
         self.setCentralWidget(container)
         self.setFixedSize(800, 320)
-        print('Программа запущена')
-        # Сигналы для управления СОМ портом
-        self.com_parameters.com_status.clicked.connect(self.open_com_port)
         # Сигналы для управления функциями
         self.funk_enable.test.stateChanged.connect(self.test_enable)
         self.funk_enable.full_power.stateChanged.connect(self.full_power_enable)
         # Сигналы для общего управления
-        self.general_management.request.clicked.connect(self.get_start_data)
+        # self.general_management.request.clicked.connect(self.get_start_data)
         self.general_management.default.clicked.connect(self.default_all_param)
         # Сигнал изменения радиокнопки
         self.transceiver_power.button_group.buttonClicked.connect(self.set_pwr_transceiver)
@@ -94,13 +90,6 @@ class MainWindow(QMainWindow):
         self.funk_enable.enable_all_element(checked)
         self.battery.enable_all_element(checked)
         self.freq_options.enable_all_element(checked)
-
-    def open_com_port(self, status):
-        result, self.serial_worker = self.com_parameters.open_com_port(status, self.serial_worker)
-        self.enable_all_element(status)
-        self.status_show(result)
-        if self.serial_worker is not None:
-            self.get_start_data()
 
     def test_enable(self, status):
         self.funk_enable.test_enable(status)
@@ -126,11 +115,7 @@ class MainWindow(QMainWindow):
         self.att_current.value_changed(self.att_current.att_slider.value())
         self.transceiver_power.send_current_transceiver(button.text())
 
-    @staticmethod
-    def get_start_data():
-        hardware.send_message(0x1E, bytearray([0x20, 0x06]))
-        hardware.send_message(0x1E, bytearray([0x20, 0x07]))
-        hardware.send_message(0x1E, bytearray([0x20, 0x08]))
+
 
     def set_value_transceiver(self, value):
         self.transceiver_power.set_value_transceiver(value)
@@ -171,20 +156,6 @@ class ComParameters(QWidget):
         else:
             self.com_status.setText('Открыть')
             self.com_list.setEnabled(True)
-
-    def open_com_port(self, checked, serial_worker):
-        if checked:
-            com_name = self.com_list.currentText()
-            try:
-                serial_worker = hardware.open_port(com_name)
-                hardware.send_message(0)
-                return f' {com_name} открыт', serial_worker
-            except serial.serialutil.SerialException:
-                return 'Ошибка открытия порта', None
-        else:
-            com_name = self.com_list.currentText()
-            hardware.close_port(serial_worker)
-            return f' {com_name} закрыт', None
 
 
 class FunkEnable(QWidget):

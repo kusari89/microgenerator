@@ -1,28 +1,41 @@
 import sys
-
 from PyQt6.QtWidgets import QApplication
-from Application import MainWindow
 from hardware import rb
+from control_modem import ControlModem
+from hardware import CMD, StatusCMD, ExtTest, Status
 
 
 def on_packet_received(packet):
     cmd = rb.packet_to_dict(packet)['command']
     data = list(rb.packet_to_dict(packet)['data'])
     print(data)
-    if cmd == 0x00:
-        window.status_show('Устройство обнаружено')
-    elif cmd == 0x1E:
-        if data[0] == 0x20 and data[1] == 0x06:
-            window.set_value_transceiver(data[2])
-        elif data[0] == 0x20 and data[1] == 0x07:
-            window.set_value_att(data[2])
-        elif data[0] == 0x20 and data[1] == 0x08:
-            window.set_value_battery(data[2])
+    if cmd == CMD.ping.value:
+        window.main_window.status_show('Устройство обнаружено')
+        StatusCMD[CMD.ping.name] = False
+    elif cmd == CMD.ext.value and data[0] == CMD.test.value:
+        if data[1] == ExtTest.get_transceiver_value.value:
+            StatusCMD[ExtTest.get_transceiver_value.name] = False
+            print(data[0], data[1])
+        elif data[1] == ExtTest.get_attenuator_value.value:
+            StatusCMD[ExtTest.get_attenuator_value.name] = False
+            print(data[0], data[1])
+        elif data[1] == ExtTest.get_battery_value.value:
+            StatusCMD[ExtTest.get_battery_value.name] = False
+            print(data[0], data[1])
+        elif data[1] == ExtTest.get_test_alarm.value:
+            StatusCMD[ExtTest.get_test_alarm.name] = False
+            print(data[0], data[1])
+        elif data[1] == ExtTest.get_power_enable.value:
+            StatusCMD[ExtTest.get_power_enable.name] = False
+            print(data[0], data[1])
+        elif data[1] == ExtTest.get_continue_mode.value:
+            StatusCMD[ExtTest.get_continue_mode.name] = False
+            print(data[0], data[1])
 
 
 if __name__ == '__main__':
     rb.on_packet_received_callback = on_packet_received
     app = QApplication(sys.argv)
-    window = MainWindow()
-    window.show()
+    window = ControlModem()
+    window.main_window.show()
     app.exec()
