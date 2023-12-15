@@ -69,9 +69,9 @@ class MainWindow(QMainWindow):
         container.setLayout(layout_main)
         # Устанавливаем центральный виджет Window.
         self.setCentralWidget(container)
-        self.setFixedSize(800, 320)
+        self.setFixedSize(800, 340)
         # Сигналы для управления функциями
-        self.funk_enable.test.stateChanged.connect(self.test_enable)
+
         self.funk_enable.full_power.stateChanged.connect(self.full_power_enable)
         # Сигналы для общего управления
         # self.general_management.request.clicked.connect(self.get_start_data)
@@ -91,8 +91,6 @@ class MainWindow(QMainWindow):
         self.battery.enable_all_element(checked)
         self.freq_options.enable_all_element(checked)
 
-    def test_enable(self, status):
-        self.funk_enable.test_enable(status)
 
     def full_power_enable(self, status):
         if status:
@@ -140,6 +138,7 @@ class ComParameters(QWidget):
 
         port_label = QLabel('Порт')
         groupbox = QGroupBox(port_label.text())
+        groupbox.setFixedSize(150, 110)
 
         group_layout = QVBoxLayout(groupbox)
         group_layout.addWidget(self.com_list)
@@ -167,12 +166,17 @@ class FunkEnable(QWidget):
         self.full_power = QCheckBox('FULL POWER')
         self.full_power.setDisabled(True)
 
+        self.continue_mode = QCheckBox('CONTINUE MODE')
+        self.continue_mode.setDisabled(True)
+
         funk_enable_label = QLabel('Активация функций')
         groupbox = QGroupBox(funk_enable_label.text())
+        groupbox.setFixedSize(150, 110)
 
         group_layout = QVBoxLayout(groupbox)
         group_layout.addWidget(self.test)
         group_layout.addWidget(self.full_power)
+        group_layout.addWidget(self.continue_mode)
 
         lay = QVBoxLayout()
         lay.addWidget(groupbox)
@@ -182,18 +186,13 @@ class FunkEnable(QWidget):
         if checked:
             self.test.setEnabled(True)
             self.full_power.setEnabled(True)
+            self.continue_mode.setEnabled(True)
         else:
             self.test.setDisabled(True)
             self.full_power.setDisabled(True)
+            self.continue_mode.setDisabled(True)
 
-    @staticmethod
-    def test_enable(status):
-        if status == 2:
-            data = bytearray([0x20, 0x01, 0x01])
-            hardware.send_message(0x1E, data)
-        else:
-            data = bytearray([0x20, 0x01, 0x00])
-            hardware.send_message(0x1E, data)
+
 
     @staticmethod
     def full_power_enable(status):
@@ -374,6 +373,7 @@ class GeneralManagement(QWidget):
 
         general_management_label = QLabel('Общее упавление')
         groupbox = QGroupBox(general_management_label.text())
+        groupbox.setFixedSize(190, 110)
 
         group_layout = QVBoxLayout(groupbox)
         group_layout.addWidget(self.request)

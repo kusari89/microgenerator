@@ -10,6 +10,7 @@ class ControlModem:
 
     # подключенные сигналы
         self.main_window.com_parameters.com_status.clicked.connect(self.start_work)
+        self.main_window.funk_enable.test.stateChanged.connect(self.test_enable)
 
     def start_work(self, checked):
         com_name = self.main_window.com_parameters.com_list.currentText()
@@ -19,13 +20,21 @@ class ControlModem:
                 self.serial_worker = hw.open_port(com_name)
                 hw.send_message(hw.CMD.ping)
                 self.main_window.status_show(f' {com_name} открыт')
+                self.get_start_data()
             except serial.serialutil.SerialException:
                 self.main_window.status_show(f'Ошибка открытия {com_name}')
         else:
             hw.close_port(self.serial_worker)
             self.serial_worker = None
             self.main_window.status_show(f' {com_name} закрыт')
-        self.get_start_data()
+
+    @staticmethod
+    def test_enable(status):
+        if status == 2:
+            hw.send_message(hw.CMD.ext, [hw.CMD.test, hw.ExtTest.test_alarm, hw.Status.on])
+        else:
+            hw.send_message(hw.CMD.ext, [hw.CMD.test, hw.ExtTest.test_alarm, hw.Status.off])
+
 
     @staticmethod
     def get_start_data():
