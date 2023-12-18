@@ -84,7 +84,6 @@ class MainWindow(QMainWindow):
         self.battery.enable_all_element(checked)
         self.freq_options.enable_all_element(checked)
 
-
     def set_value_transceiver(self, value):
         self.transceiver_power.set_value_transceiver(value)
 
