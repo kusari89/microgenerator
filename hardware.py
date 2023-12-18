@@ -36,17 +36,25 @@ def send_message(cmd, data=None):
             counter += 1
             if counter > 2:
                 break
-    elif data is not None:
+    elif type(data) == bytearray:
+        rb.send_cmd(rb.Address.SENSOR, cmd, data)
+    elif data is not None and type(data) != bytearray:
         StatusCMD[data[1].name] = True
         send_data = bytearray()
         for symbol in data:
-            send_data += bytearray([symbol.value])
+            if type(symbol) in (CMD, ExtTest, Status):
+                send_data += bytearray([symbol.value])
+            elif type(symbol) == int:
+                send_data += bytearray([symbol])
+            elif type(symbol) == bytearray:
+                send_data += symbol
         while StatusCMD[data[1].name] is True:
-            rb.send_cmd(rb.Address.SENSOR, cmd.value, send_data)
-            time.sleep(0.2)
+            send_data_temp = send_data
+            rb.send_cmd(rb.Address.SENSOR, cmd.value, send_data_temp)
+            time.sleep(0.1)
             counter += 1
             if counter > 2:
-                break
+                return
 
 
 def close_port(serial_worker):
@@ -68,6 +76,7 @@ StatusCMD = {
     'set_continue_mode': False,
     'get_continue_mode': False,
             }
+
 
 class CMD(Enum):
     ping = 0x00
@@ -93,3 +102,4 @@ class ExtTest(Enum):
 class Status(Enum):
     on = 0x01
     off = 0x00
+

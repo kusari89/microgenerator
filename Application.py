@@ -70,14 +70,7 @@ class MainWindow(QMainWindow):
         # Устанавливаем центральный виджет Window.
         self.setCentralWidget(container)
         self.setFixedSize(800, 340)
-        # Сигналы для управления функциями
 
-        self.funk_enable.full_power.stateChanged.connect(self.full_power_enable)
-        # Сигналы для общего управления
-        # self.general_management.request.clicked.connect(self.get_start_data)
-        self.general_management.default.clicked.connect(self.default_all_param)
-        # Сигнал изменения радиокнопки
-        self.transceiver_power.button_group.buttonClicked.connect(self.set_pwr_transceiver)
 
     def status_show(self, text):
         self.statusBar().showMessage(text)
@@ -90,29 +83,6 @@ class MainWindow(QMainWindow):
         self.funk_enable.enable_all_element(checked)
         self.battery.enable_all_element(checked)
         self.freq_options.enable_all_element(checked)
-
-
-    def full_power_enable(self, status):
-        if status:
-            self.funk_enable.full_power_enable(status)
-        else:
-            value_pwr = self.transceiver_power.button_group.checkedButton().text()
-            value_att = self.att_current.att_slider.value()
-            self.funk_enable.full_power_enable(status)
-            self.transceiver_power.send_current_transceiver(value_pwr)
-            self.att_current.value_changed(value_att)
-
-    def request_all_param(self):
-        self.general_management.request_all_param()
-
-    def default_all_param(self):
-        self.general_management.default_all_param()
-
-    def set_pwr_transceiver(self, button):
-        self.att_current.transceiver_power = button.text()
-        self.att_current.value_changed(self.att_current.att_slider.value())
-        self.transceiver_power.send_current_transceiver(button.text())
-
 
 
     def set_value_transceiver(self, value):
@@ -193,17 +163,6 @@ class FunkEnable(QWidget):
             self.continue_mode.setDisabled(True)
 
 
-
-    @staticmethod
-    def full_power_enable(status):
-        if status == 2:
-            data = bytearray([0x20, 0x02, 0x01])
-            hardware.send_message(0x1E, data)
-        else:
-            data = bytearray([0x20, 0x02, 0x00])
-            hardware.send_message(0x1E, data)
-
-
 class TransceiverPower(QWidget):
     def __init__(self):
         super().__init__()
@@ -221,7 +180,7 @@ class TransceiverPower(QWidget):
             "226": self.radiobutton_power_5,
         }
         self.buttons_values_send = {
-            "10": 10,
+            "+10": 10,
             "0": 0,
             "-10": 246,
             "-20": 236,
@@ -262,6 +221,7 @@ class TransceiverPower(QWidget):
             self.radiobutton_power_3.setEnabled(True)
             self.radiobutton_power_4.setEnabled(True)
             self.radiobutton_power_5.setEnabled(True)
+            self.radiobutton_power_2.setChecked(True)
         else:
             self.radiobutton_power_1.setDisabled(True)
             self.radiobutton_power_2.setDisabled(True)
@@ -272,12 +232,6 @@ class TransceiverPower(QWidget):
     def set_value_transceiver(self, value):
         button = self.buttons_values[str(value)]
         button.setChecked(True)
-
-    def send_current_transceiver(self, value):
-        value = int(value.split()[0])
-        send_value = self.buttons_values_send[str(value)]
-        data = bytearray([0x20, 0x03, send_value])
-        hardware.send_message(0x1E, data)
 
 
 class AttCurrent(QWidget):
@@ -391,26 +345,6 @@ class GeneralManagement(QWidget):
         else:
             self.request.setDisabled(True)
             self.default.setDisabled(True)
-
-    @staticmethod
-    def default_all_param():
-        data = bytearray([0x20, 0x03, 0x00])
-        hardware.send_message(0x1E, data)
-        data = bytearray([0x20, 0x04, 0x14])
-        hardware.send_message(0x1E, data)
-        data = bytearray([0x20, 0x06])
-        hardware.send_message(0x1E, data)
-        data = bytearray([0x20, 0x07])
-        hardware.send_message(0x1E, data)
-
-    @staticmethod
-    def request_all_param():
-        data = bytearray([0x20, 0x06])
-        hardware.send_message(0x1E, data)
-        data = bytearray([0x20, 0x07])
-        hardware.send_message(0x1E, data)
-        data = bytearray([0x20, 0x08])
-        hardware.send_message(0x1E, data)
 
 
 class FreqOptions(QWidget):

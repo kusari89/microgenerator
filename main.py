@@ -8,12 +8,10 @@ from hardware import CMD, StatusCMD, ExtTest, Status
 def on_packet_received(packet):
     cmd = rb.packet_to_dict(packet)['command']
     data = list(rb.packet_to_dict(packet)['data'])
-    print(cmd)
     if cmd == CMD.ping.value:
         window.main_window.status_show('Устройство обнаружено')
         StatusCMD[CMD.ping.name] = False
     elif cmd == CMD.ext.value and data[0] == CMD.test.value:
-        print(data[0], data[1])
         if data[1] == ExtTest.get_transceiver_value.value:
             StatusCMD[ExtTest.get_transceiver_value.name] = False
             print(data[0], data[1])
@@ -40,6 +38,12 @@ def on_packet_received(packet):
             print(data[0], data[1])
         elif data[1] == ExtTest.set_continue_mode.value:
             StatusCMD[ExtTest.set_continue_mode.name] = False
+            print(data[0], data[1])
+        elif data[1] == ExtTest.set_attenuator.value:
+            StatusCMD[ExtTest.set_attenuator.name] = False
+            print(data[0], data[1])
+        elif data[1] == ExtTest.set_transceiver.value:
+            StatusCMD[ExtTest.set_transceiver.name] = False
             print(data[0], data[1])
 
 
