@@ -479,11 +479,12 @@ class Battery(QWidget):
 
     def set_value_battery(self, value):
         self.battery_lvl.setText(str(value) + ' В')
-        if 18 > value >= 6:
+        if 18 > value >= 7:
             self.battery_status.setText('Норма')
-        elif 6 > value > 4:
+            self.battery_status.setStyleSheet("QLineEdit { color: black; background-color: white;}")
+        elif 7 > value > 4:
             self.battery_status.setText('Заменить')
             self.battery_status.setStyleSheet("QLineEdit { color: black; background-color: yellow;}")
-        elif 4 > value:
+        elif 4 >= value:
             self.battery_status.setText('Заменить')
             self.battery_status.setStyleSheet("QLineEdit { color: black; background-color: red;}")

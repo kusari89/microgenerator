@@ -19,7 +19,7 @@ class ControlModem:
         self.main_window.general_management.request.clicked.connect(self.request_all_param)
         self.main_window.general_management.default.clicked.connect(self.default_all_param)
         # Сигнал от радиокнопки
-        self.main_window.transceiver_power.button_group.buttonClicked.connect(self.set_pwr_transceiver)
+        self.main_window.transceiver_power.button_group.buttonClicked.connect(self.set_value_transceiver)
 
     '''
     Метод запускает работу программы. Открывает компорт, а если ком порт открыт, то закрывает его. 
@@ -87,7 +87,7 @@ class ControlModem:
             value_att = self.main_window.att_current.att_slider.value()
             hw.send_message(hw.CMD.ext, [hw.CMD.test, hw.ExtTest.power_enable, hw.Status.off])
             self.send_current_transceiver(value_pwr)
-            self.main_window.att_current.value_changed(value_att)
+            self.send_current_attenuator(value_att)
 
     '''
     Метод запускает функцию "continue_mode" на микрогенераторе, при снятии флага метод отправляет 
@@ -111,7 +111,7 @@ class ControlModem:
     def send_current_attenuator(value):
         hw.send_message(hw.CMD.ext, [hw.CMD.test, hw.ExtTest.set_attenuator, value])
 
-    def set_pwr_transceiver(self, button):
+    def set_value_transceiver(self, button):
         self.main_window.att_current.transceiver_power = button.text()
         self.main_window.att_current.value_changed(self.main_window.att_current.att_slider.value())
         self.send_current_transceiver(button.text())
