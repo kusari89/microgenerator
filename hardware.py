@@ -32,17 +32,20 @@ def send_message(cmd, data=None):
         StatusCMD[cmd.name] = True
         while StatusCMD[cmd.name] is True:
             rb.send_cmd(rb.Address.SENSOR, cmd.value)
-            time.sleep(0.2)
+            time.sleep(0.1)
             counter += 1
             if counter > 2:
                 break
     elif type(data) == bytearray:
         rb.send_cmd(rb.Address.SENSOR, cmd, data)
-    elif data is not None and type(data) != bytearray:
+    elif type(data) in (CMD, ExtTest, Status, RslParam):
+        StatusCMD[data.name] = True
+        rb.send_cmd(rb.Address.SENSOR, cmd.value, bytearray([data.value]))
+    elif type(data) == list:
         StatusCMD[data[1].name] = True
         send_data = bytearray()
         for symbol in data:
-            if type(symbol) in (CMD, ExtTest, Status):
+            if type(symbol) in (CMD, ExtTest, Status, RslParam):
                 send_data += bytearray([symbol.value])
             elif type(symbol) == int:
                 send_data += bytearray([symbol])
@@ -51,7 +54,7 @@ def send_message(cmd, data=None):
         while StatusCMD[data[1].name] is True:
             send_data_temp = send_data
             rb.send_cmd(rb.Address.SENSOR, cmd.value, send_data_temp)
-            time.sleep(0.1)
+            time.sleep(0.15)
             counter += 1
             if counter > 2:
                 return
@@ -75,6 +78,8 @@ StatusCMD = {
     'get_battery_value': False,
     'set_continue_mode': False,
     'get_continue_mode': False,
+    'set_rsl_param': False,
+    'get_rsl_param': False,
             }
 
 
@@ -82,6 +87,12 @@ class CMD(Enum):
     ping = 0x00
     ext = 0x1E
     test = 0x20
+    rsl_parameters = 0x1D
+
+
+class RslParam(Enum):
+    get_rsl_param = 0x23
+    set_rsl_param = 0x24
 
 
 class ExtTest(Enum):

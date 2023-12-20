@@ -13,7 +13,7 @@ from PyQt6.QtWidgets import (
     QGroupBox,
     QButtonGroup,
 )
-
+import struct
 import PyQt6.QtGui
 import serial.tools.list_ports
 import configparser
@@ -70,7 +70,6 @@ class MainWindow(QMainWindow):
         # Устанавливаем центральный виджет Window.
         self.setCentralWidget(container)
         self.setFixedSize(800, 340)
-
 
     def status_show(self, text):
         self.statusBar().showMessage(text)
@@ -405,7 +404,8 @@ class FreqOptions(QWidget):
         lay.addWidget(groupbox)
 
         self.setLayout(lay)
-        self.install_parameters.clicked.connect(self.set_display_parameters)
+
+        self.install_parameters.clicked.connect(self.send_display_parameters)
         self.letter.currentTextChanged.connect(self.display_new_parameters)
 
     def enable_all_element(self, checked):
@@ -422,9 +422,11 @@ class FreqOptions(QWidget):
             self.clock_freq.setDisabled(True)
             self.manual_edit.setDisabled(True)
 
-    def set_display_parameters(self):
-        self.carrier_freq.setText(self.config[f'{self.letter.currentText()}']['carrierFrequency_kHz'])
-        self.clock_freq.setText(str(float(self.config[f'{self.letter.currentText()}']['clockRate_x100'])/100))
+    def set_display_parameters(self, data):
+        data = bytearray(data)
+        data = struct.unpack('<cLHHLHH', data)
+        self.carrier_freq.setText(str(data[1]))
+        self.clock_freq.setText(str(data[2]/100))
         self.carrier_freq.setStyleSheet("QLineEdit { color: black; background-color: white;}")
         self.clock_freq.setStyleSheet("QLineEdit { color: black; background-color: white;}")
 
@@ -433,6 +435,9 @@ class FreqOptions(QWidget):
         self.clock_freq.setText(str(float(self.config[f'{self.letter.currentText()}']['clockRate_x100']) / 100))
         self.carrier_freq.setStyleSheet("QLineEdit { color: black; background-color: yellow;}")
         self.clock_freq.setStyleSheet("QLineEdit { color: black; background-color: yellow;}")
+
+    def send_display_parameters(self):
+        pass
 
 
 class Battery(QWidget):
@@ -479,7 +484,7 @@ class Battery(QWidget):
 
     def set_value_battery(self, value):
         self.battery_lvl.setText(str(value) + ' В')
-        if 18 > value >= 7:
+        if 11 > value >= 7:
             self.battery_status.setText('Норма')
             self.battery_status.setStyleSheet("QLineEdit { color: black; background-color: white;}")
         elif 7 > value > 4:
@@ -488,3 +493,4 @@ class Battery(QWidget):
         elif 4 >= value:
             self.battery_status.setText('Заменить')
             self.battery_status.setStyleSheet("QLineEdit { color: black; background-color: red;}")
+

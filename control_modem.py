@@ -20,6 +20,7 @@ class ControlModem:
         self.main_window.general_management.default.clicked.connect(self.default_all_param)
         # Сигнал от радиокнопки
         self.main_window.transceiver_power.button_group.buttonClicked.connect(self.set_value_transceiver)
+        # Сигналы от блока настройки частоты
 
     '''
     Метод запускает работу программы. Открывает компорт, а если ком порт открыт, то закрывает его. 
@@ -65,6 +66,7 @@ class ControlModem:
         hw.send_message(hw.CMD.ext, [hw.CMD.test, hw.ExtTest.get_test_alarm])
         hw.send_message(hw.CMD.ext, [hw.CMD.test, hw.ExtTest.get_power_enable])
         hw.send_message(hw.CMD.ext, [hw.CMD.test, hw.ExtTest.get_continue_mode])
+        hw.send_message(hw.CMD.rsl_parameters, hw.RslParam.get_rsl_param)
 
     def default_all_param(self):
         hw.send_message(hw.CMD.ext, [hw.CMD.test, hw.ExtTest.set_transceiver, 0])
