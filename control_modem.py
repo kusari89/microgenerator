@@ -1,6 +1,7 @@
 from Application import MainWindow
 import hardware as hw
 import serial.tools.list_ports
+import struct
 
 
 class ControlModem:
@@ -21,6 +22,7 @@ class ControlModem:
         # Сигнал от радиокнопки
         self.main_window.transceiver_power.button_group.buttonClicked.connect(self.set_value_transceiver)
         # Сигналы от блока настройки частоты
+        self.main_window.freq_options.install_parameters.clicked.connect(self.send_display_parameters)
 
     '''
     Метод запускает работу программы. Открывает компорт, а если ком порт открыт, то закрывает его. 
@@ -117,3 +119,11 @@ class ControlModem:
         self.main_window.att_current.transceiver_power = button.text()
         self.main_window.att_current.value_changed(self.main_window.att_current.att_slider.value())
         self.send_current_transceiver(button.text())
+
+    def send_display_parameters(self):
+        clock_freq = int(float(self.main_window.freq_options.clock_freq.text())*100)
+        carrier_freq = int(float(self.main_window.freq_options.carrier_freq.text()))
+        data = bytearray(struct.pack('<LH', carrier_freq, clock_freq)) + bytearray(10)
+        self.main_window.freq_options.carrier_freq.setStyleSheet("QLineEdit { color: black; background-color: white;}")
+        self.main_window.freq_options.clock_freq.setStyleSheet("QLineEdit { color: black; background-color: white;}")
+        hw.send_message(hw.CMD.rsl_parameters, [hw.RslParam.set_rsl_param, data])

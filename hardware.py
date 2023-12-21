@@ -42,22 +42,39 @@ def send_message(cmd, data=None):
         StatusCMD[data.name] = True
         rb.send_cmd(rb.Address.SENSOR, cmd.value, bytearray([data.value]))
     elif type(data) == list:
-        StatusCMD[data[1].name] = True
-        send_data = bytearray()
-        for symbol in data:
-            if type(symbol) in (CMD, ExtTest, Status, RslParam):
-                send_data += bytearray([symbol.value])
-            elif type(symbol) == int:
-                send_data += bytearray([symbol])
-            elif type(symbol) == bytearray:
-                send_data += symbol
-        while StatusCMD[data[1].name] is True:
-            send_data_temp = send_data
-            rb.send_cmd(rb.Address.SENSOR, cmd.value, send_data_temp)
-            time.sleep(0.15)
-            counter += 1
-            if counter > 2:
-                return
+        if data[0] == CMD.test:
+            StatusCMD[data[1].name] = True
+            send_data = bytearray()
+            for symbol in data:
+                if type(symbol) in (CMD, ExtTest, Status, RslParam):
+                    send_data += bytearray([symbol.value])
+                elif type(symbol) == int:
+                    send_data += bytearray([symbol])
+                elif type(symbol) == bytearray:
+                    send_data += symbol
+            while StatusCMD[data[1].name] is True:
+                send_data_temp = send_data
+                rb.send_cmd(rb.Address.SENSOR, cmd.value, send_data_temp)
+                time.sleep(0.15)
+                counter += 1
+                if counter > 2:
+                    return
+        elif data[0] == RslParam.set_rsl_param:
+            StatusCMD[data[0].name] = True
+            send_data = bytearray()
+            for symbol in data:
+                if type(symbol) in (CMD, ExtTest, Status, RslParam):
+                    send_data += bytearray([symbol.value])
+                elif type(symbol) == int:
+                    send_data += bytearray([symbol])
+                elif type(symbol) == bytearray:
+                    send_data += symbol
+            while StatusCMD[data[0].name] is True:
+                rb.send_cmd(rb.Address.SENSOR, cmd.value, send_data)
+                time.sleep(0.15)
+                counter += 1
+                if counter > 2:
+                    return
 
 
 def close_port(serial_worker):

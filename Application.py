@@ -405,8 +405,8 @@ class FreqOptions(QWidget):
 
         self.setLayout(lay)
 
-        self.install_parameters.clicked.connect(self.send_display_parameters)
         self.letter.currentTextChanged.connect(self.display_new_parameters)
+        self.manual_edit.clicked.connect(self.display_manual_parameters)
 
     def enable_all_element(self, checked):
         if checked:
@@ -423,12 +423,20 @@ class FreqOptions(QWidget):
             self.manual_edit.setDisabled(True)
 
     def set_display_parameters(self, data):
+        self.letter.currentTextChanged.disconnect(self.display_new_parameters)
         data = bytearray(data)
         data = struct.unpack('<cLHHLHH', data)
         self.carrier_freq.setText(str(data[1]))
         self.clock_freq.setText(str(data[2]/100))
+        for section in self.config.sections():
+            if str(data[1]) == self.config[section]['carrierFrequency_kHz'] and str(data[2]) == self.config[section]['clockRate_x100']:
+                self.letter.setCurrentText(section)
+                break
+            else:
+                self.letter.setCurrentIndex(-1)
         self.carrier_freq.setStyleSheet("QLineEdit { color: black; background-color: white;}")
         self.clock_freq.setStyleSheet("QLineEdit { color: black; background-color: white;}")
+        self.letter.currentTextChanged.connect(self.display_new_parameters)
 
     def display_new_parameters(self):
         self.carrier_freq.setText(self.config[f'{self.letter.currentText()}']['carrierFrequency_kHz'])
@@ -436,8 +444,8 @@ class FreqOptions(QWidget):
         self.carrier_freq.setStyleSheet("QLineEdit { color: black; background-color: yellow;}")
         self.clock_freq.setStyleSheet("QLineEdit { color: black; background-color: yellow;}")
 
-    def send_display_parameters(self):
-        pass
+    def display_manual_parameters(self):
+        self.manual_edit.setText('Эта функция еще не работает ;-)')
 
 
 class Battery(QWidget):
