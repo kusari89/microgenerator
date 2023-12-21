@@ -13,7 +13,7 @@ from PyQt6.QtWidgets import (
     QGroupBox,
     QButtonGroup,
 )
-
+import struct
 import PyQt6.QtGui
 import serial.tools.list_ports
 import configparser
@@ -37,7 +37,6 @@ class MainWindow(QMainWindow):
         self.funk_enable = FunkEnable()
         self.battery = Battery()
         self.freq_options = FreqOptions()
-        self.serial_worker = None
 
         layout_left = QVBoxLayout()
         layout_left.addWidget(self.com_parameters)
@@ -70,18 +69,7 @@ class MainWindow(QMainWindow):
         container.setLayout(layout_main)
         # Устанавливаем центральный виджет Window.
         self.setCentralWidget(container)
-        self.setFixedSize(800, 320)
-        print('Программа запущена')
-        # Сигналы для управления СОМ портом
-        self.com_parameters.com_status.clicked.connect(self.open_com_port)
-        # Сигналы для управления функциями
-        self.funk_enable.test.stateChanged.connect(self.test_enable)
-        self.funk_enable.full_power.stateChanged.connect(self.full_power_enable)
-        # Сигналы для общего управления
-        self.general_management.request.clicked.connect(self.get_start_data)
-        self.general_management.default.clicked.connect(self.default_all_param)
-        # Сигнал изменения радиокнопки
-        self.transceiver_power.button_group.buttonClicked.connect(self.set_pwr_transceiver)
+        self.setFixedSize(800, 340)
 
     def status_show(self, text):
         self.statusBar().showMessage(text)
@@ -94,43 +82,6 @@ class MainWindow(QMainWindow):
         self.funk_enable.enable_all_element(checked)
         self.battery.enable_all_element(checked)
         self.freq_options.enable_all_element(checked)
-
-    def open_com_port(self, status):
-        result, self.serial_worker = self.com_parameters.open_com_port(status, self.serial_worker)
-        self.enable_all_element(status)
-        self.status_show(result)
-        if self.serial_worker is not None:
-            self.get_start_data()
-
-    def test_enable(self, status):
-        self.funk_enable.test_enable(status)
-
-    def full_power_enable(self, status):
-        if status:
-            self.funk_enable.full_power_enable(status)
-        else:
-            value_pwr = self.transceiver_power.button_group.checkedButton().text()
-            value_att = self.att_current.att_slider.value()
-            self.funk_enable.full_power_enable(status)
-            self.transceiver_power.send_current_transceiver(value_pwr)
-            self.att_current.value_changed(value_att)
-
-    def request_all_param(self):
-        self.general_management.request_all_param()
-
-    def default_all_param(self):
-        self.general_management.default_all_param()
-
-    def set_pwr_transceiver(self, button):
-        self.att_current.transceiver_power = button.text()
-        self.att_current.value_changed(self.att_current.att_slider.value())
-        self.transceiver_power.send_current_transceiver(button.text())
-
-    @staticmethod
-    def get_start_data():
-        hardware.send_message(0x1E, bytearray([0x20, 0x06]))
-        hardware.send_message(0x1E, bytearray([0x20, 0x07]))
-        hardware.send_message(0x1E, bytearray([0x20, 0x08]))
 
     def set_value_transceiver(self, value):
         self.transceiver_power.set_value_transceiver(value)
@@ -155,6 +106,7 @@ class ComParameters(QWidget):
 
         port_label = QLabel('Порт')
         groupbox = QGroupBox(port_label.text())
+        groupbox.setFixedSize(150, 110)
 
         group_layout = QVBoxLayout(groupbox)
         group_layout.addWidget(self.com_list)
@@ -172,20 +124,6 @@ class ComParameters(QWidget):
             self.com_status.setText('Открыть')
             self.com_list.setEnabled(True)
 
-    def open_com_port(self, checked, serial_worker):
-        if checked:
-            com_name = self.com_list.currentText()
-            try:
-                serial_worker = hardware.open_port(com_name)
-                hardware.send_message(0)
-                return f' {com_name} открыт', serial_worker
-            except serial.serialutil.SerialException:
-                return 'Ошибка открытия порта', None
-        else:
-            com_name = self.com_list.currentText()
-            hardware.close_port(serial_worker)
-            return f' {com_name} закрыт', None
-
 
 class FunkEnable(QWidget):
     def __init__(self):
@@ -196,12 +134,17 @@ class FunkEnable(QWidget):
         self.full_power = QCheckBox('FULL POWER')
         self.full_power.setDisabled(True)
 
+        self.continue_mode = QCheckBox('CONTINUE MODE')
+        self.continue_mode.setDisabled(True)
+
         funk_enable_label = QLabel('Активация функций')
         groupbox = QGroupBox(funk_enable_label.text())
+        groupbox.setFixedSize(150, 110)
 
         group_layout = QVBoxLayout(groupbox)
         group_layout.addWidget(self.test)
         group_layout.addWidget(self.full_power)
+        group_layout.addWidget(self.continue_mode)
 
         lay = QVBoxLayout()
         lay.addWidget(groupbox)
@@ -211,27 +154,11 @@ class FunkEnable(QWidget):
         if checked:
             self.test.setEnabled(True)
             self.full_power.setEnabled(True)
+            self.continue_mode.setEnabled(True)
         else:
             self.test.setDisabled(True)
             self.full_power.setDisabled(True)
-
-    @staticmethod
-    def test_enable(status):
-        if status == 2:
-            data = bytearray([0x20, 0x01, 0x01])
-            hardware.send_message(0x1E, data)
-        else:
-            data = bytearray([0x20, 0x01, 0x00])
-            hardware.send_message(0x1E, data)
-
-    @staticmethod
-    def full_power_enable(status):
-        if status == 2:
-            data = bytearray([0x20, 0x02, 0x01])
-            hardware.send_message(0x1E, data)
-        else:
-            data = bytearray([0x20, 0x02, 0x00])
-            hardware.send_message(0x1E, data)
+            self.continue_mode.setDisabled(True)
 
 
 class TransceiverPower(QWidget):
@@ -251,7 +178,7 @@ class TransceiverPower(QWidget):
             "226": self.radiobutton_power_5,
         }
         self.buttons_values_send = {
-            "10": 10,
+            "+10": 10,
             "0": 0,
             "-10": 246,
             "-20": 236,
@@ -292,6 +219,7 @@ class TransceiverPower(QWidget):
             self.radiobutton_power_3.setEnabled(True)
             self.radiobutton_power_4.setEnabled(True)
             self.radiobutton_power_5.setEnabled(True)
+            self.radiobutton_power_2.setChecked(True)
         else:
             self.radiobutton_power_1.setDisabled(True)
             self.radiobutton_power_2.setDisabled(True)
@@ -302,12 +230,6 @@ class TransceiverPower(QWidget):
     def set_value_transceiver(self, value):
         button = self.buttons_values[str(value)]
         button.setChecked(True)
-
-    def send_current_transceiver(self, value):
-        value = int(value.split()[0])
-        send_value = self.buttons_values_send[str(value)]
-        data = bytearray([0x20, 0x03, send_value])
-        hardware.send_message(0x1E, data)
 
 
 class AttCurrent(QWidget):
@@ -403,6 +325,7 @@ class GeneralManagement(QWidget):
 
         general_management_label = QLabel('Общее упавление')
         groupbox = QGroupBox(general_management_label.text())
+        groupbox.setFixedSize(190, 110)
 
         group_layout = QVBoxLayout(groupbox)
         group_layout.addWidget(self.request)
@@ -420,26 +343,6 @@ class GeneralManagement(QWidget):
         else:
             self.request.setDisabled(True)
             self.default.setDisabled(True)
-
-    @staticmethod
-    def default_all_param():
-        data = bytearray([0x20, 0x03, 0x00])
-        hardware.send_message(0x1E, data)
-        data = bytearray([0x20, 0x04, 0x14])
-        hardware.send_message(0x1E, data)
-        data = bytearray([0x20, 0x06])
-        hardware.send_message(0x1E, data)
-        data = bytearray([0x20, 0x07])
-        hardware.send_message(0x1E, data)
-
-    @staticmethod
-    def request_all_param():
-        data = bytearray([0x20, 0x06])
-        hardware.send_message(0x1E, data)
-        data = bytearray([0x20, 0x07])
-        hardware.send_message(0x1E, data)
-        data = bytearray([0x20, 0x08])
-        hardware.send_message(0x1E, data)
 
 
 class FreqOptions(QWidget):
@@ -501,8 +404,9 @@ class FreqOptions(QWidget):
         lay.addWidget(groupbox)
 
         self.setLayout(lay)
-        self.install_parameters.clicked.connect(self.set_display_parameters)
+
         self.letter.currentTextChanged.connect(self.display_new_parameters)
+        self.manual_edit.clicked.connect(self.display_manual_parameters)
 
     def enable_all_element(self, checked):
         if checked:
@@ -518,17 +422,30 @@ class FreqOptions(QWidget):
             self.clock_freq.setDisabled(True)
             self.manual_edit.setDisabled(True)
 
-    def set_display_parameters(self):
-        self.carrier_freq.setText(self.config[f'{self.letter.currentText()}']['carrierFrequency_kHz'])
-        self.clock_freq.setText(str(float(self.config[f'{self.letter.currentText()}']['clockRate_x100'])/100))
+    def set_display_parameters(self, data):
+        self.letter.currentTextChanged.disconnect(self.display_new_parameters)
+        data = bytearray(data)
+        data = struct.unpack('<cLHHLHH', data)
+        self.carrier_freq.setText(str(data[1]))
+        self.clock_freq.setText(str(data[2]/100))
+        for section in self.config.sections():
+            if str(data[1]) == self.config[section]['carrierFrequency_kHz'] and str(data[2]) == self.config[section]['clockRate_x100']:
+                self.letter.setCurrentText(section)
+                break
+            else:
+                self.letter.setCurrentIndex(-1)
         self.carrier_freq.setStyleSheet("QLineEdit { color: black; background-color: white;}")
         self.clock_freq.setStyleSheet("QLineEdit { color: black; background-color: white;}")
+        self.letter.currentTextChanged.connect(self.display_new_parameters)
 
     def display_new_parameters(self):
         self.carrier_freq.setText(self.config[f'{self.letter.currentText()}']['carrierFrequency_kHz'])
         self.clock_freq.setText(str(float(self.config[f'{self.letter.currentText()}']['clockRate_x100']) / 100))
         self.carrier_freq.setStyleSheet("QLineEdit { color: black; background-color: yellow;}")
         self.clock_freq.setStyleSheet("QLineEdit { color: black; background-color: yellow;}")
+
+    def display_manual_parameters(self):
+        self.manual_edit.setText('Эта функция еще не работает ;-)')
 
 
 class Battery(QWidget):
@@ -575,11 +492,13 @@ class Battery(QWidget):
 
     def set_value_battery(self, value):
         self.battery_lvl.setText(str(value) + ' В')
-        if 18 > value >= 6:
+        if 11 > value >= 7:
             self.battery_status.setText('Норма')
-        elif 6 > value > 4:
+            self.battery_status.setStyleSheet("QLineEdit { color: black; background-color: white;}")
+        elif 7 > value > 4:
             self.battery_status.setText('Заменить')
             self.battery_status.setStyleSheet("QLineEdit { color: black; background-color: yellow;}")
-        elif 4 > value:
+        elif 4 >= value:
             self.battery_status.setText('Заменить')
             self.battery_status.setStyleSheet("QLineEdit { color: black; background-color: red;}")
+
