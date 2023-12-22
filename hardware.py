@@ -53,7 +53,7 @@ def send_message(cmd, data=None):
                 elif type(symbol) == bytearray:
                     send_data += symbol
             while StatusCMD[data[1].name] is True:
-                send_data_temp = send_data
+                send_data_temp = bytearray(send_data)
                 rb.send_cmd(rb.Address.SENSOR, cmd.value, send_data_temp)
                 time.sleep(0.15)
                 counter += 1
@@ -70,7 +70,8 @@ def send_message(cmd, data=None):
                 elif type(symbol) == bytearray:
                     send_data += symbol
             while StatusCMD[data[0].name] is True:
-                rb.send_cmd(rb.Address.SENSOR, cmd.value, send_data)
+                send_data_temp = bytearray(send_data)
+                rb.send_cmd(rb.Address.SENSOR, cmd.value, send_data_temp)
                 time.sleep(0.15)
                 counter += 1
                 if counter > 2:
