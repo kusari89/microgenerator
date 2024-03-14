@@ -3,6 +3,7 @@ from serial.threaded import ReaderThread, Protocol
 from rb.rb_device import RbDevice
 from enum import Enum
 import time
+import serial.tools.list_ports
 
 rb = RbDevice()
 
@@ -19,11 +20,15 @@ class SerialReader(Protocol):
 
 
 def open_port(number_port):
-    serial_port = Serial(number_port, 4800)
-    serial_worker = ReaderThread(serial_port, SerialReader)
-    serial_worker.start()
-    rb.send_raw_data_callback = serial_port.write
-    return serial_worker
+    try:
+        serial_port = Serial(number_port, 4800)
+    except serial.serialutil.SerialException as exs:
+        raise exs
+    else:
+        serial_worker = ReaderThread(serial_port, SerialReader)
+        serial_worker.start()
+        rb.send_raw_data_callback = serial_port.write
+        return serial_worker
 
 
 def send_message(cmd, data=None):
