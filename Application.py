@@ -429,7 +429,8 @@ class FreqOptions(QWidget):
         self.carrier_freq.setText(str(data[1]))
         self.clock_freq.setText(str(data[2]/100))
         for section in self.config.sections():
-            if str(data[1]) == self.config[section]['carrierFrequency_kHz'] and str(data[2]) == self.config[section]['clockRate_x100']:
+            if str(data[1]) == self.config[section]['carrierFrequency_kHz'] \
+                    and str(data[2]) == self.config[section]['clockRate_x100']:
                 self.letter.setCurrentText(section)
                 break
             else:
@@ -492,13 +493,14 @@ class Battery(QWidget):
 
     def set_value_battery(self, value):
         self.battery_lvl.setText(str(value) + ' В')
-        if 11 > value >= 7:
+        if 11 > value >= 8:
             self.battery_status.setText('Норма')
             self.battery_status.setStyleSheet("QLineEdit { color: black; background-color: white;}")
-        elif 7 > value > 4:
+        elif 8 > value > 6:
             self.battery_status.setText('Заменить')
             self.battery_status.setStyleSheet("QLineEdit { color: black; background-color: yellow;}")
-        elif 4 >= value:
+        elif 5 >= value:
             self.battery_status.setText('Заменить')
             self.battery_status.setStyleSheet("QLineEdit { color: black; background-color: red;}")
-
+        if hardware.StatusCMD[hardware.ExtTest.low_power_notify.name] is True:
+            self.battery_status.setStyleSheet("QLineEdit { color: black; background-color: red;}")

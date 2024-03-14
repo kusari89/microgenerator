@@ -52,6 +52,9 @@ def on_packet_received(packet):
             StatusCMD[ExtTest.set_attenuator.name] = False
         elif data[1] == ExtTest.set_transceiver.value:
             StatusCMD[ExtTest.set_transceiver.name] = False
+        elif data[1] == ExtTest.low_power_notify:
+            window.main_window.fuck_low_power()
+            StatusCMD[ExtTest.low_power_notify.name] = True
     elif cmd == CMD.rsl_parameters.value:
         if data[0] == RslParam.get_rsl_param.value:
             StatusCMD[RslParam.get_rsl_param.name] = False

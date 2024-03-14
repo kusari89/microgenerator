@@ -35,11 +35,12 @@ class ControlModem:
         if checked:
             try:
                 self.serial_worker = hw.open_port(com_name)
+            except serial.serialutil.SerialException:
+                self.main_window.status_show(f'Ошибка открытия {com_name}')
+            else:
                 hw.send_message(hw.CMD.ping)
                 self.main_window.status_show(f' {com_name} открыт')
                 self.request_all_param()
-            except serial.serialutil.SerialException:
-                self.main_window.status_show(f'Ошибка открытия {com_name}')
         else:
             hw.close_port(self.serial_worker)
             self.serial_worker = None
@@ -127,3 +128,8 @@ class ControlModem:
         self.main_window.freq_options.carrier_freq.setStyleSheet("QLineEdit { color: black; background-color: white;}")
         self.main_window.freq_options.clock_freq.setStyleSheet("QLineEdit { color: black; background-color: white;}")
         hw.send_message(hw.CMD.rsl_parameters, [hw.RslParam.set_rsl_param, data])
+
+    def fuck_low_power(self):
+        hw.send_message(hw.CMD.ext, [hw.CMD.test, hw.ExtTest.get_battery_value])
+        if hw.StatusCMD[hw.ExtTest.low_power_notify.name] is True:
+            self.main_window.battery.battery_status.setStyleSheet("QLineEdit { color: black; background-color: red;}")
