@@ -31,18 +31,21 @@ class ControlModem:
 
     def start_work(self, checked):
         com_name = self.main_window.com_parameters.com_list.currentText()
-        self.main_window.enable_all_element(checked)
         if checked:
             try:
                 self.serial_worker = hw.open_port(com_name)
             except serial.serialutil.SerialException:
                 self.main_window.status_show(f'Ошибка открытия {com_name}')
+                self.main_window.com_parameters.com_status.setChecked(False)
             else:
                 hw.send_message(hw.CMD.ping)
+                self.main_window.enable_all_element(checked)
                 self.main_window.status_show(f' {com_name} открыт')
                 self.request_all_param()
         else:
             hw.close_port(self.serial_worker)
+            self.main_window.transceiver_power.button_group.buttonClicked.disconnect()
+            self.main_window.enable_all_element(checked)
             self.serial_worker = None
             self.main_window.status_show(f' {com_name} закрыт')
 

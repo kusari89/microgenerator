@@ -118,9 +118,11 @@ class ComParameters(QWidget):
 
     def enable_all_element(self, checked):
         if checked:
+            self.com_status.setChecked(True)
             self.com_status.setText('Закрыть')
             self.com_list.setDisabled(True)
         else:
+            self.com_status.setChecked(False)
             self.com_status.setText('Открыть')
             self.com_list.setEnabled(True)
 
@@ -156,6 +158,9 @@ class FunkEnable(QWidget):
             self.full_power.setEnabled(True)
             self.continue_mode.setEnabled(True)
         else:
+            self.test.setChecked(False)
+            self.full_power.setChecked(False)
+            self.continue_mode.setChecked(False)
             self.test.setDisabled(True)
             self.full_power.setDisabled(True)
             self.continue_mode.setDisabled(True)
@@ -226,6 +231,11 @@ class TransceiverPower(QWidget):
             self.radiobutton_power_3.setDisabled(True)
             self.radiobutton_power_4.setDisabled(True)
             self.radiobutton_power_5.setDisabled(True)
+            self.radiobutton_power_1.setChecked(False)
+            self.radiobutton_power_2.setChecked(False)
+            self.radiobutton_power_3.setChecked(False)
+            self.radiobutton_power_4.setChecked(False)
+            self.radiobutton_power_5.setChecked(False)
 
     def set_value_transceiver(self, value):
         button = self.buttons_values[str(value)]
@@ -243,11 +253,11 @@ class AttCurrent(QWidget):
         self.att_slider.setPageStep(1)
         self.att_slider.setSingleStep(1)
 
-        self.att_current = QLineEdit('0.00')
+        self.att_current = QLineEdit('')
         self.att_current.setReadOnly(True)
         att_current_label = QLabel('Значение аттенюатора')
 
-        self.pwr_current = QLineEdit('0.00')
+        self.pwr_current = QLineEdit('')
         self.pwr_current.setReadOnly(True)
         pwr_current_label = QLabel('Выходная мощность')
 
@@ -281,6 +291,10 @@ class AttCurrent(QWidget):
             self.att_current.setEnabled(True)
             self.pwr_current.setEnabled(True)
         else:
+            self.att_slider.valueChanged.disconnect()
+            self.att_slider.setValue(0)
+            self.att_current.setText('')
+            self.pwr_current.setText('')
             self.att_slider.setDisabled(True)
             self.att_current.setDisabled(True)
             self.pwr_current.setDisabled(True)
@@ -416,6 +430,10 @@ class FreqOptions(QWidget):
             self.clock_freq.setEnabled(True)
             self.manual_edit.setEnabled(True)
         else:
+            self.letter.currentTextChanged.disconnect()
+            self.letter.setCurrentIndex(-1)
+            self.carrier_freq.setText('')
+            self.clock_freq.setText('')
             self.letter.setDisabled(True)
             self.install_parameters.setDisabled(True)
             self.carrier_freq.setDisabled(True)
@@ -488,6 +506,8 @@ class Battery(QWidget):
             self.battery_lvl.setEnabled(True)
             self.battery_status.setEnabled(True)
         else:
+            self.battery_lvl.setText('')
+            self.battery_status.setText('')
             self.battery_lvl.setDisabled(True)
             self.battery_status.setDisabled(True)
 
