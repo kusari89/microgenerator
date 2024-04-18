@@ -4,8 +4,7 @@ from rb.rb_device import RbDevice
 from enum import Enum
 import time
 import serial.tools.list_ports
-
-rb = RbDevice()
+import threading
 
 
 class SerialReader(Protocol):
@@ -26,7 +25,10 @@ def open_port(number_port):
         raise exs
     else:
         serial_worker = ReaderThread(serial_port, SerialReader)
+        serial_worker.name = 'Thread COM'
         serial_worker.start()
+        serial_worker_name = serial_worker.name
+        print(f'{serial_worker_name} запущен...')
         rb.send_raw_data_callback = serial_port.write
         return serial_worker
 
@@ -85,7 +87,9 @@ def send_message(cmd, data=None):
 
 def close_port(serial_worker):
     serial_worker.close()
+    print(rb)
 
+rb = RbDevice()
 
 StatusCMD = {
     'ping': False,

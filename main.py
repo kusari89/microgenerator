@@ -3,9 +3,12 @@ from PyQt6.QtWidgets import QApplication
 from hardware import rb
 from control_modem import ControlModem
 from hardware import CMD, StatusCMD, ExtTest, Status, RslParam
+import queue
 
+input_data = queue.Queue()
 
 def on_packet_received(packet):
+    #packet = input_data.get()
     cmd = rb.packet_to_dict(packet)['command']
     data = list(rb.packet_to_dict(packet)['data'])
     if cmd == CMD.ping.value:
@@ -63,9 +66,13 @@ def on_packet_received(packet):
             StatusCMD[RslParam.set_rsl_param.name] = False
 
 
+def on_packet_received_1(packet):
+    input_data.put(packet)
+
+
 if __name__ == '__main__':
-    rb.on_packet_received_callback = on_packet_received
     app = QApplication(sys.argv)
     window = ControlModem()
     window.main_window.show()
+    rb.on_packet_received_callback = on_packet_received
     app.exec()

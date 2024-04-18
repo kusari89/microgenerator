@@ -224,7 +224,6 @@ class TransceiverPower(QWidget):
             self.radiobutton_power_3.setEnabled(True)
             self.radiobutton_power_4.setEnabled(True)
             self.radiobutton_power_5.setEnabled(True)
-            self.radiobutton_power_2.setChecked(True)
         else:
             self.radiobutton_power_1.setDisabled(True)
             self.radiobutton_power_2.setDisabled(True)
@@ -283,10 +282,10 @@ class AttCurrent(QWidget):
 
         self.att_slider.sliderPressed.connect(self.slider_pressed)
         self.att_slider.sliderReleased.connect(self.slider_released)
-        self.att_slider.valueChanged.connect(self.value_changed)
 
     def enable_all_element(self, checked):
         if checked:
+            self.att_slider.valueChanged.connect(self.value_changed)
             self.att_slider.setEnabled(True)
             self.att_current.setEnabled(True)
             self.pwr_current.setEnabled(True)
@@ -375,15 +374,18 @@ class FreqOptions(QWidget):
 
         self.carrier_freq = QLineEdit()
         self.carrier_freq.setReadOnly(True)
+        self.carrier_freq.setValidator(PyQt6.QtGui.QIntValidator(429500, 438000))
         self.carrier_freq.setFixedSize(238, 25)
         carrier_freq_label = QLabel('Несущая частота')
 
         self.clock_freq = QLineEdit()
         self.clock_freq.setReadOnly(True)
+        self.clock_freq.setValidator(PyQt6.QtGui.QDoubleValidator())
         self.clock_freq.setFixedSize(238, 25)
         clock_freq_label = QLabel('Тактовая частота')
 
         self.manual_edit = QPushButton('Редактировать частоты вручную')
+        self.manual_edit.setCheckable(True)
 
         self.letter.setDisabled(True)
         self.install_parameters.setDisabled(True)
@@ -419,11 +421,9 @@ class FreqOptions(QWidget):
 
         self.setLayout(lay)
 
-        self.letter.currentTextChanged.connect(self.display_new_parameters)
-        self.manual_edit.clicked.connect(self.display_manual_parameters)
-
     def enable_all_element(self, checked):
         if checked:
+            self.letter.currentTextChanged.connect(self.display_new_parameters)
             self.letter.setEnabled(True)
             self.install_parameters.setEnabled(True)
             self.carrier_freq.setEnabled(True)
@@ -463,9 +463,32 @@ class FreqOptions(QWidget):
         self.carrier_freq.setStyleSheet("QLineEdit { color: black; background-color: yellow;}")
         self.clock_freq.setStyleSheet("QLineEdit { color: black; background-color: yellow;}")
 
-    def display_manual_parameters(self):
-        self.manual_edit.setText('Эта функция еще не работает ;-)')
-
+    def display_manual_parameters(self, checked):
+        clock_freq = int(float(self.clock_freq.text()) * 100)
+        carrier_freq = int(float(self.carrier_freq.text()))
+        if checked:
+            self.letter.setDisabled(True)
+            self.install_parameters.setDisabled(True)
+            self.carrier_freq.setReadOnly(False)
+            self.clock_freq.setReadOnly(False)
+            self.manual_edit.setText('Установить параметры')
+            self.carrier_freq.setStyleSheet("QLineEdit { color: black; background-color: yellow;}")
+            self.clock_freq.setStyleSheet("QLineEdit { color: black; background-color: yellow;}")
+        else:
+            self.carrier_freq.setReadOnly(True)
+            self.clock_freq.setReadOnly(True)
+            self.letter.setEnabled(True)
+            self.install_parameters.setEnabled(True)
+            if 429500 <= carrier_freq <= 438000 and 600 <= clock_freq <= 2500:
+                self.manual_edit.setText('Редактировать частоты вручную')
+                self.carrier_freq.setStyleSheet("QLineEdit { color: black; background-color: white;}")
+                self.clock_freq.setStyleSheet("QLineEdit { color: black; background-color: white;}")
+                return True
+            else:
+                self.carrier_freq.setText(str(carrier_freq))
+                self.clock_freq.setText(str(clock_freq))
+                self.manual_edit.setText('Параметры некорректны')
+                return False
 
 class Battery(QWidget):
     def __init__(self):
@@ -508,6 +531,7 @@ class Battery(QWidget):
         else:
             self.battery_lvl.setText('')
             self.battery_status.setText('')
+            self.battery_status.setStyleSheet("QLineEdit { color: black; background-color: white;}")
             self.battery_lvl.setDisabled(True)
             self.battery_status.setDisabled(True)
 

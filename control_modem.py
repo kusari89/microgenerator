@@ -2,6 +2,8 @@ from Application import MainWindow
 import hardware as hw
 import serial.tools.list_ports
 import struct
+from PyQt6.QtCore import QTimer
+import threading
 
 
 class ControlModem:
@@ -19,10 +21,9 @@ class ControlModem:
         # Сигналы блока общего управления
         self.main_window.general_management.request.clicked.connect(self.request_all_param)
         self.main_window.general_management.default.clicked.connect(self.default_all_param)
-        # Сигнал от радиокнопки
-        self.main_window.transceiver_power.button_group.buttonClicked.connect(self.set_value_transceiver)
         # Сигналы от блока настройки частоты
         self.main_window.freq_options.install_parameters.clicked.connect(self.send_display_parameters)
+        self.main_window.freq_options.manual_edit.clicked.connect(self.display_manual_parameters)
 
     '''
     Метод запускает работу программы. Открывает компорт, а если ком порт открыт, то закрывает его. 
@@ -32,6 +33,8 @@ class ControlModem:
     def start_work(self, checked):
         com_name = self.main_window.com_parameters.com_list.currentText()
         if checked:
+            # Сигнал от радиокнопки
+            self.main_window.transceiver_power.button_group.buttonClicked.connect(self.set_value_transceiver)
             try:
                 self.serial_worker = hw.open_port(com_name)
             except serial.serialutil.SerialException:
@@ -136,3 +139,15 @@ class ControlModem:
         hw.send_message(hw.CMD.ext, [hw.CMD.test, hw.ExtTest.get_battery_value])
         if hw.StatusCMD[hw.ExtTest.low_power_notify.name] is True:
             self.main_window.battery.battery_status.setStyleSheet("QLineEdit { color: black; background-color: red;}")
+
+    def display_manual_parameters(self, checked):
+        if checked:
+            self.main_window.freq_options.display_manual_parameters(checked)
+        else:
+            if self.main_window.freq_options.display_manual_parameters(checked):
+                self.send_display_parameters()
+                hw.send_message(hw.CMD.rsl_parameters, hw.RslParam.get_rsl_param)
+            else:
+                pass
+
+
