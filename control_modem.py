@@ -14,10 +14,6 @@ class ControlModem:
     # подключенные сигналы
         # сигнал кнопки ком порта
         self.main_window.com_parameters.com_status.clicked.connect(self.start_work)
-        # сигналы блока функции
-        self.main_window.funk_enable.test.stateChanged.connect(self.test_enable)
-        self.main_window.funk_enable.full_power.stateChanged.connect(self.full_power_enable)
-        self.main_window.funk_enable.continue_mode.stateChanged.connect(self.continue_mode_enable)
         # Сигналы блока общего управления
         self.main_window.general_management.request.clicked.connect(self.request_all_param)
         self.main_window.general_management.default.clicked.connect(self.default_all_param)
@@ -42,12 +38,18 @@ class ControlModem:
                 self.main_window.com_parameters.com_status.setChecked(False)
             else:
                 hw.send_message(hw.CMD.ping)
+                self.main_window.funk_enable.test.stateChanged.connect(self.test_enable)
+                self.main_window.funk_enable.full_power.stateChanged.connect(self.full_power_enable)
+                self.main_window.funk_enable.continue_mode.stateChanged.connect(self.continue_mode_enable)
                 self.main_window.enable_all_element(checked)
                 self.main_window.status_show(f' {com_name} открыт')
                 self.request_all_param()
         else:
             hw.close_port(self.serial_worker)
             self.main_window.transceiver_power.button_group.buttonClicked.disconnect()
+            self.main_window.funk_enable.test.stateChanged.disconnect()
+            self.main_window.funk_enable.full_power.stateChanged.disconnect()
+            self.main_window.funk_enable.continue_mode.stateChanged.disconnect()
             self.main_window.enable_all_element(checked)
             self.serial_worker = None
             self.main_window.status_show(f' {com_name} закрыт')

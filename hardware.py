@@ -87,7 +87,6 @@ def send_message(cmd, data=None):
 
 def close_port(serial_worker):
     serial_worker.close()
-    print(rb)
 
 rb = RbDevice()
 
