@@ -116,6 +116,8 @@ class ComParameters(QWidget):
         lay.addWidget(groupbox)
         self.setLayout(lay)
 
+        self.com_list.highlighted.connect(self.update)
+
     def enable_all_element(self, checked):
         if checked:
             self.com_status.setChecked(True)
@@ -125,6 +127,12 @@ class ComParameters(QWidget):
             self.com_status.setChecked(False)
             self.com_status.setText('Открыть')
             self.com_list.setEnabled(True)
+
+
+    def update(self):
+        print('hi')
+
+
 
 
 class FunkEnable(QWidget):
